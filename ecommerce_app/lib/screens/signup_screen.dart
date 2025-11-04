@@ -1,6 +1,7 @@
 import 'package:ecommerce_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -16,6 +17,7 @@ class _SignUpScreenState extends State<SignupScreen> {
 
   bool _isLoading = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) {
@@ -27,16 +29,20 @@ class _SignUpScreenState extends State<SignupScreen> {
     });
 
     try {
-      // 1. This is the Firebase command to CREATE a user
+      final UserCredential userCredential =
       await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // 2. AuthWrapper will auto-navigate to HomeScreen.
-
+      if (userCredential.user != null) {
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'email': _emailController.text.trim(),
+          'role': 'user',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
     } on FirebaseAuthException catch (e) {
-      // 3. Handle specific sign-up errors
       String message = 'An error occurred';
       if (e.code == 'weak-password') {
         message = 'The password provided is too weak.';
@@ -52,12 +58,12 @@ class _SignUpScreenState extends State<SignupScreen> {
       );
     } catch (e) {
       print(e);
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

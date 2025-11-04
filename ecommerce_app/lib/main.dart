@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:ecommerce_app/screens/auth_wrapper.dart';
+import 'package:ecommerce_app/providers/cart_provider.dart';
+import 'package:provider/provider.dart';
 
 void main () async {
 
@@ -13,7 +15,12 @@ void main () async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CartProvider(),
+      child: const MyApp(),
+    ),
+  );
 
   FlutterNativeSplash.remove();
 }
@@ -29,8 +36,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
       ),
-      // 1. Change this line
-      home: const AuthWrapper(),  // 2. Set LoginScreen as the home
+      home: const AuthWrapper(),
     );
   }
 }
